@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ship Performance Analysis - MAIRAKI</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #1a3a52 100%);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+            text-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #b0bec5;
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            border: 2px solid rgba(79, 195, 247, 0.5);
+            background: rgba(79, 195, 247, 0.1);
+            color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: #4fc3f7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            border-color: #4fc3f7;
+            box-shadow: 0 4px 16px rgba(79, 195, 247, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn small {
+            display: block;
+            font-size: 0.75em;
+            font-weight: 400;
+            margin-top: 4px;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(79, 195, 247, 0.2) 0%, rgba(41, 182, 246, 0.2) 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #b0bec5;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+
+        .stat-unit {
+            font-size: 0.8em;
+            color: #90a4ae;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .filter-options {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .legend-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #b0bec5;
+        }
+
+        .legend-info strong {
+            color: #4fc3f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚓ Ship Performance Analysis</h1>
+            <div class="subtitle">MAIRAKI - Post Hull Cleaning (August 2025)</div>
+        </header>
+
+        <div class="controls-panel">
+            <div class="filter-group">
+                <label class="filter-label">🚢 Vessel Condition</label>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="condition" data-value="Ballast">Ballast</button>
+                    <button class="filter-btn" data-filter="condition" data-value="Laden">Laden</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">⚡ Speed Type</label>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="speed" data-value="SOG">SOG (Speed Over Ground)</button>
+                    <button class="filter-btn" data-filter="speed" data-value="STW (HC)">STW (HC) (Speed Through Water)</button>
+                    <button class="filter-btn" data-filter="speed" data-value="STW (Rep)">STW (Rep) (Reported)</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">🌤️ Good Weather Criteria</label>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="weather" data-value="all">All Data</button>
+                    <button class="filter-btn" data-filter="weather" data-value="CP - Good wx">CP Good Weather<br><small>(Up to BF4 & 1.3m Sig wave ht, No Adv currents)</small></button>
+                    <button class="filter-btn" data-filter="weather" data-value="CP - Good wx_All_Currents">CP Good Weather (All Currents)<br><small>(Up to BF4 & 1.3m Sig wave ht)</small></button>
+                    <button class="filter-btn" data-filter="weather" data-value="Ideal_Good_wx_cl">Ideal Good Weather<br><small>(Up to BF4 & 2m Sig wave ht)</small></button>
+                </div>
+            </div>
+
+            <div class="legend-info">
+                <strong>Chart Legend:</strong><br>
+                <strong>Lines:</strong> 🟢 CP (Charter Party) Performance | 🟠 CP About (Boundary) Performance<br>
+                <strong>Data Points:</strong> 🔴 CF (HC) < 0 (Adverse Currents) | 🟠 Sig Wave Ht > 1.3m (Rough Seas) | 🔵 Normal Conditions
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="performanceChart"></div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Data Points</div>
+                    <div class="stat-value" id="statDataPoints">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Speed</div>
+                    <div class="stat-value">
+                        <span id="statAvgSpeed">0.00</span>
+                        <span class="stat-unit">knots</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Consumption</div>
+                    <div class="stat-value">
+                        <span id="statAvgCons">0.00</span>
+                        <span class="stat-unit">mt/day</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data will be embedded here
+        const DATA = {
+  "voyage_data": [
+    {
+      "Date/Time": "2025-08-10 ",
+      "Condition": "Laden",
+      "SOG": 11.33,
+      "STW (HC)": 11.16,
+      "STW (Rep)": 11.5,
+      "CF (HC)": 0.17,
+      "Total Cons/day": 44.25,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.34,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-11 ",
+      "Condition": "Laden",
+      "SOG": 11.54,
+      "STW (HC)": 11.09,
+      "STW (Rep)": 12.04,
+      "CF (HC)": 0.45,
+      "Total Cons/day": 43.19,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.21,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-12 ",
+      "Condition": "Laden",
+      "SOG": 12.08,
+      "STW (HC)": 11.19,
+      "STW (Rep)": 12.29,
+      "CF (HC)": 0.89,
+      "Total Cons/day": 44.12,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.16,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-13 ",
+      "Condition": "Laden",
+      "SOG": 11.29,
+      "STW (HC)": 10.78,
+      "STW (Rep)": 11.5,
+      "CF (HC)": 0.51,
+      "Total Cons/day": 42.42,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.69,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-14 ",
+      "Condition": "Laden",
+      "SOG": 11.0,
+      "STW (HC)": 10.77,
+      "STW (Rep)": 11.21,
+      "CF (HC)": 0.23,
+      "Total Cons/day": 41.92,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.36,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-15 ",
+      "Condition": "Laden",
+      "SOG": 11.13,
+      "STW (HC)": 10.4,
+      "STW (Rep)": 11.0,
+      "CF (HC)": 0.73,
+      "Total Cons/day": 40.1,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.14,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-16 ",
+      "Condition": "Laden",
+      "SOG": 10.83,
+      "STW (HC)": 10.57,
+      "STW (Rep)": 10.71,
+      "CF (HC)": 0.26,
+      "Total Cons/day": 41.42,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.09,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-17 ",
+      "Condition": "Laden",
+      "SOG": 11.08,
+      "STW (HC)": 10.46,
+      "STW (Rep)": 11.58,
+      "CF (HC)": 0.62,
+      "Total Cons/day": 41.73,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.69,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-18 ",
+      "Condition": "Laden",
+      "SOG": 11.08,
+      "STW (HC)": 10.96,
+      "STW (Rep)": 11.58,
+      "CF (HC)": 0.12,
+      "Total Cons/day": 41.73,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.87,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-19 ",
+      "Condition": "Laden",
+      "SOG": 8.58,
+      "STW (HC)": 8.71,
+      "STW (Rep)": 9.17,
+      "CF (HC)": -0.13,
+      "Total Cons/day": 34.24,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.49,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-24 ",
+      "Condition": "Ballast",
+      "SOG": 10.0,
+      "STW (HC)": 10.15,
+      "STW (Rep)": 10.08,
+      "CF (HC)": -0.15,
+      "Total Cons/day": 30.38,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.5,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-25 ",
+      "Condition": "Ballast",
+      "SOG": 10.54,
+      "STW (HC)": 10.68,
+      "STW (Rep)": 11.33,
+      "CF (HC)": -0.14,
+      "Total Cons/day": 30.3,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.04,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-26 ",
+      "Condition": "Ballast",
+      "SOG": 10.88,
+      "STW (HC)": 10.950000000000001,
+      "STW (Rep)": 11.17,
+      "CF (HC)": -0.07,
+      "Total Cons/day": 30.5,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.6,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-27 ",
+      "Condition": "Ballast",
+      "SOG": 11.46,
+      "STW (HC)": 11.040000000000001,
+      "STW (Rep)": 11.83,
+      "CF (HC)": 0.42,
+      "Total Cons/day": 30.48,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.68,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-28 ",
+      "Condition": "Ballast",
+      "SOG": 10.57,
+      "STW (HC)": 10.73,
+      "STW (Rep)": 10.78,
+      "CF (HC)": -0.16,
+      "Total Cons/day": 30.46,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.95,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-29 ",
+      "Condition": "Ballast",
+      "SOG": 10.42,
+      "STW (HC)": 10.4,
+      "STW (Rep)": 11.0,
+      "CF (HC)": 0.02,
+      "Total Cons/day": 30.6,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.24,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-30 ",
+      "Condition": "Ballast",
+      "SOG": 10.17,
+      "STW (HC)": 10.36,
+      "STW (Rep)": 10.67,
+      "CF (HC)": -0.19,
+      "Total Cons/day": 30.77,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.25,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-08-31 ",
+      "Condition": "Ballast",
+      "SOG": 10.0,
+      "STW (HC)": 10.22,
+      "STW (Rep)": 10.79,
+      "CF (HC)": -0.22,
+      "Total Cons/day": 30.75,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.44,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-01 ",
+      "Condition": "Ballast",
+      "SOG": 10.42,
+      "STW (HC)": 10.59,
+      "STW (Rep)": 10.96,
+      "CF (HC)": -0.17,
+      "Total Cons/day": 30.7,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.23,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-02 ",
+      "Condition": "Ballast",
+      "SOG": 10.63,
+      "STW (HC)": 10.610000000000001,
+      "STW (Rep)": 10.83,
+      "CF (HC)": 0.02,
+      "Total Cons/day": 30.48,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.95,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-03 ",
+      "Condition": "Ballast",
+      "SOG": 10.63,
+      "STW (HC)": 10.25,
+      "STW (Rep)": 10.92,
+      "CF (HC)": 0.38,
+      "Total Cons/day": 28.9,
+      "BF (HC)": 2.0,
+      "Sig wave ht (HC)": 0.9,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-04 ",
+      "Condition": "Ballast",
+      "SOG": 10.0,
+      "STW (HC)": 10.17,
+      "STW (Rep)": 10.22,
+      "CF (HC)": -0.17,
+      "Total Cons/day": 29.36,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.97,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-05 ",
+      "Condition": "Ballast",
+      "SOG": 9.79,
+      "STW (HC)": 10.319999999999999,
+      "STW (Rep)": 9.5,
+      "CF (HC)": -0.53,
+      "Total Cons/day": 29.6,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.95,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-06 ",
+      "Condition": "Ballast",
+      "SOG": 9.42,
+      "STW (HC)": 10.06,
+      "STW (Rep)": 9.71,
+      "CF (HC)": -0.64,
+      "Total Cons/day": 29.52,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.96,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-07 ",
+      "Condition": "Ballast",
+      "SOG": 9.79,
+      "STW (HC)": 9.639999999999999,
+      "STW (Rep)": 10.29,
+      "CF (HC)": 0.15,
+      "Total Cons/day": 29.55,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 1.63,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-08 ",
+      "Condition": "Ballast",
+      "SOG": 8.75,
+      "STW (HC)": 8.87,
+      "STW (Rep)": 9.33,
+      "CF (HC)": -0.12,
+      "Total Cons/day": 29.78,
+      "BF (HC)": 6.0,
+      "Sig wave ht (HC)": 3.08,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-09 ",
+      "Condition": "Ballast",
+      "SOG": 9.08,
+      "STW (HC)": 9.23,
+      "STW (Rep)": 9.58,
+      "CF (HC)": -0.15,
+      "Total Cons/day": 29.83,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 2.97,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-10 ",
+      "Condition": "Ballast",
+      "SOG": 10.92,
+      "STW (HC)": 10.21,
+      "STW (Rep)": 10.71,
+      "CF (HC)": 0.71,
+      "Total Cons/day": 29.13,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.48,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-16 ",
+      "Condition": "Laden",
+      "SOG": 10.25,
+      "STW (HC)": 10.4,
+      "STW (Rep)": 10.75,
+      "CF (HC)": -0.15,
+      "Total Cons/day": 47.49,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 2.41,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-17 ",
+      "Condition": "Laden",
+      "SOG": 10.67,
+      "STW (HC)": 10.87,
+      "STW (Rep)": 10.96,
+      "CF (HC)": -0.2,
+      "Total Cons/day": 47.4,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 2.4,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-18 ",
+      "Condition": "Laden",
+      "SOG": 11.46,
+      "STW (HC)": 11.46,
+      "STW (Rep)": 11.25,
+      "CF (HC)": 0.0,
+      "Total Cons/day": 47.75,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.37,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-19 ",
+      "Condition": "Laden",
+      "SOG": 12.4,
+      "STW (HC)": 12.06,
+      "STW (Rep)": 12.08,
+      "CF (HC)": 0.34,
+      "Total Cons/day": 47.37,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.96,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-20 ",
+      "Condition": "Laden",
+      "SOG": 11.63,
+      "STW (HC)": 11.430000000000001,
+      "STW (Rep)": 11.42,
+      "CF (HC)": 0.2,
+      "Total Cons/day": 46.78,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.88,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-21 ",
+      "Condition": "Laden",
+      "SOG": 11.79,
+      "STW (HC)": 11.19,
+      "STW (Rep)": 11.88,
+      "CF (HC)": 0.6,
+      "Total Cons/day": 46.16,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.78,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-22 ",
+      "Condition": "Laden",
+      "SOG": 11.0,
+      "STW (HC)": 11.12,
+      "STW (Rep)": 11.29,
+      "CF (HC)": -0.12,
+      "Total Cons/day": 47.6,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.08,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-23 ",
+      "Condition": "Laden",
+      "SOG": 10.83,
+      "STW (HC)": 10.93,
+      "STW (Rep)": 11.04,
+      "CF (HC)": -0.1,
+      "Total Cons/day": 47.71,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.22,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-09-24 ",
+      "Condition": "Laden",
+      "SOG": 10.42,
+      "STW (HC)": 10.31,
+      "STW (Rep)": 9.83,
+      "CF (HC)": 0.11,
+      "Total Cons/day": 45.56,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 2.27,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-25 ",
+      "Condition": "Laden",
+      "SOG": 10.13,
+      "STW (HC)": 9.110000000000001,
+      "STW (Rep)": 9.54,
+      "CF (HC)": 1.02,
+      "Total Cons/day": 38.98,
+      "BF (HC)": 6.0,
+      "Sig wave ht (HC)": 3.04,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-26 ",
+      "Condition": "Laden",
+      "SOG": 10.63,
+      "STW (HC)": 9.530000000000001,
+      "STW (Rep)": 10.42,
+      "CF (HC)": 1.1,
+      "Total Cons/day": 39.18,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 3.17,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-27 ",
+      "Condition": "Laden",
+      "SOG": 10.28,
+      "STW (HC)": 10.139999999999999,
+      "STW (Rep)": 10.08,
+      "CF (HC)": 0.14,
+      "Total Cons/day": 39.23,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 2.73,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    },
+    {
+      "Date/Time": "2025-09-28 ",
+      "Condition": "Laden",
+      "SOG": 10.5,
+      "STW (HC)": 10.58,
+      "STW (Rep)": 10.21,
+      "CF (HC)": -0.08,
+      "Total Cons/day": 38.53,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.94,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-07 ",
+      "Condition": "Ballast",
+      "SOG": 11.75,
+      "STW (HC)": 11.59,
+      "STW (Rep)": 11.67,
+      "CF (HC)": 0.16,
+      "Total Cons/day": 36.06,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.25,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-08 ",
+      "Condition": "Ballast",
+      "SOG": 12.17,
+      "STW (HC)": 12.23,
+      "STW (Rep)": 12.04,
+      "CF (HC)": -0.06,
+      "Total Cons/day": 38.99,
+      "BF (HC)": 2.0,
+      "Sig wave ht (HC)": 0.43,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-09 ",
+      "Condition": "Ballast",
+      "SOG": 12.0,
+      "STW (HC)": 11.75,
+      "STW (Rep)": 0.08,
+      "CF (HC)": 0.25,
+      "Total Cons/day": 38.25,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.76,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-10 ",
+      "Condition": "Ballast",
+      "SOG": 12.5,
+      "STW (HC)": 11.73,
+      "STW (Rep)": 12.5,
+      "CF (HC)": 0.77,
+      "Total Cons/day": 35.95,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.54,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-11 ",
+      "Condition": "Ballast",
+      "SOG": 12.04,
+      "STW (HC)": 11.62,
+      "STW (Rep)": 12.04,
+      "CF (HC)": 0.42,
+      "Total Cons/day": 35.36,
+      "BF (HC)": 2.0,
+      "Sig wave ht (HC)": 0.29,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-19 ",
+      "Condition": "Laden",
+      "SOG": 10.88,
+      "STW (HC)": 10.07,
+      "STW (Rep)": null,
+      "CF (HC)": 0.81,
+      "Total Cons/day": 38.13,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 0.37,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-20 ",
+      "Condition": "Laden",
+      "SOG": 9.96,
+      "STW (HC)": 9.98,
+      "STW (Rep)": null,
+      "CF (HC)": -0.02,
+      "Total Cons/day": 38.41,
+      "BF (HC)": 2.0,
+      "Sig wave ht (HC)": 0.33,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-21 ",
+      "Condition": "Laden",
+      "SOG": 9.67,
+      "STW (HC)": 10.22,
+      "STW (Rep)": 9.67,
+      "CF (HC)": -0.55,
+      "Total Cons/day": 39.3,
+      "BF (HC)": 2.0,
+      "Sig wave ht (HC)": 0.21,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-22 ",
+      "Condition": "Laden",
+      "SOG": 9.33,
+      "STW (HC)": 10.31,
+      "STW (Rep)": 9.33,
+      "CF (HC)": -0.98,
+      "Total Cons/day": 38.3,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 0.49,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-25 ",
+      "Condition": "Laden",
+      "SOG": 10.58,
+      "STW (HC)": 10.56,
+      "STW (Rep)": 10.79,
+      "CF (HC)": 0.02,
+      "Total Cons/day": 38.65,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.18,
+      "CP - Good wx": true,
+      "CP - Good wx_All_Currents": true,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-26 ",
+      "Condition": "Laden",
+      "SOG": 9.17,
+      "STW (HC)": 9.34,
+      "STW (Rep)": 9.42,
+      "CF (HC)": -0.17,
+      "Total Cons/day": 38.13,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.96,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-27 ",
+      "Condition": "Laden",
+      "SOG": 8.4,
+      "STW (HC)": 9.96,
+      "STW (Rep)": 8.4,
+      "CF (HC)": -1.56,
+      "Total Cons/day": 36.99,
+      "BF (HC)": 3.0,
+      "Sig wave ht (HC)": 1.77,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-28 ",
+      "Condition": "Laden",
+      "SOG": 9.92,
+      "STW (HC)": 11.01,
+      "STW (Rep)": 9.63,
+      "CF (HC)": -1.09,
+      "Total Cons/day": 45.35,
+      "BF (HC)": 4.0,
+      "Sig wave ht (HC)": 1.98,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": true
+    },
+    {
+      "Date/Time": "2025-10-29 ",
+      "Condition": "Laden",
+      "SOG": 10.42,
+      "STW (HC)": 10.24,
+      "STW (Rep)": 10.21,
+      "CF (HC)": 0.18,
+      "Total Cons/day": 41.57,
+      "BF (HC)": 5.0,
+      "Sig wave ht (HC)": 2.53,
+      "CP - Good wx": false,
+      "CP - Good wx_All_Currents": false,
+      "Ideal_Good_wx_cl": false
+    }
+  ],
+  "cp": {
+    "ballast": {
+      "cp": [],
+      "cp_abt": []
+    },
+    "laden": {
+      "cp": [
+        {
+          "speed": 10.5,
+          "cons": 30
+        },
+        {
+          "speed": 11,
+          "cons": 34
+        },
+        {
+          "speed": 12.5,
+          "cons": 45.5
+        },
+        {
+          "speed": 13.5,
+          "cons": 58.5
+        }
+      ],
+      "cp_abt": [
+        {
+          "speed": 10,
+          "cons": 31.5
+        },
+        {
+          "speed": 10.5,
+          "cons": 35.7
+        },
+        {
+          "speed": 12,
+          "cons": 47.775
+        },
+        {
+          "speed": 13,
+          "cons": 61.425
+        }
+      ]
+    }
+  }
+};
+
+        // Current filter state
+        let filters = {
+            condition: 'Ballast',
+            speed: 'SOG',
+            weather: 'all'
+        };
+
+        // Initialize the application
+        function init() {
+            if (!DATA) {
+                console.error('Data not loaded');
+                return;
+            }
+
+            // Set up event listeners for filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filterType = this.dataset.filter;
+                    const filterValue = this.dataset.value;
+
+                    // Update active state
+                    document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Update filter state
+                    filters[filterType] = filterValue;
+
+                    // Update chart and stats
+                    updateVisualization();
+                });
+            });
+
+            // Initial render
+            updateVisualization();
+        }
+
+        function updateVisualization() {
+            const filteredData = filterData();
+            renderChart(filteredData);
+            updateStats(filteredData);
+        }
+
+        function filterData() {
+            // Filter voyage data based on current filters
+            let filtered = DATA.voyage_data.filter(row => {
+                // Filter by condition
+                if (row.Condition !== filters.condition) {
+                    return false;
+                }
+
+                // Filter by weather criteria
+                if (filters.weather !== 'all') {
+                    if (!row[filters.weather]) {
+                        return false;
+                    }
+                }
+
+                // Must have valid speed and consumption data
+                if (!row[filters.speed] || !row['Total Cons/day']) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            return filtered;
+        }
+
+        function renderChart(filteredData) {
+            // Get CP data based on condition
+            const condition = filters.condition.toLowerCase();
+            const cpData = DATA.cp[condition];
+
+            // Prepare traces
+            const traces = [];
+
+            // CP line (connected points)
+            if (cpData.cp && cpData.cp.length > 0) {
+                traces.push({
+                    x: cpData.cp.map(d => d.speed),
+                    y: cpData.cp.map(d => d.cons),
+                    mode: 'lines+markers',
+                    name: 'CP',
+                    line: { color: '#2e7d32', width: 3 },
+                    marker: { size: 8, color: '#2e7d32' },
+                    hovertemplate: '<b>CP</b><br>Speed: %{x:.2f} knots<br>Cons: %{y:.2f} mt/day<extra></extra>'
+                });
+            }
+
+            // CP About line (connected points)
+            if (cpData.cp_abt && cpData.cp_abt.length > 0) {
+                traces.push({
+                    x: cpData.cp_abt.map(d => d.speed),
+                    y: cpData.cp_abt.map(d => d.cons),
+                    mode: 'lines+markers',
+                    name: 'CP About',
+                    line: { color: '#f57c00', width: 3, dash: 'dash' },
+                    marker: { size: 8, color: '#f57c00' },
+                    hovertemplate: '<b>CP About</b><br>Speed: %{x:.2f} knots<br>Cons: %{y:.2f} mt/day<extra></extra>'
+                });
+            }
+
+            // Actual voyage data points with color coding
+            if (filteredData.length > 0) {
+                const speeds = filteredData.map(d => d[filters.speed]);
+                const cons = filteredData.map(d => d['Total Cons/day']);
+                const dates = filteredData.map(d => d['Date/Time']);
+                const bf = filteredData.map(d => d['BF (HC)']);
+                const waveHt = filteredData.map(d => d['Sig wave ht (HC)']);
+                const cf = filteredData.map(d => d['CF (HC)']);
+
+                // Determine color for each point
+                // Priority: Red (CF < 0) > Orange (Wave > 1.3) > Blue (normal)
+                const colors = filteredData.map(d => {
+                    if (d['CF (HC)'] !== null && d['CF (HC)'] < 0) {
+                        return '#d32f2f'; // Red for adverse currents (CF < 0)
+                    } else if (d['Sig wave ht (HC)'] !== null && d['Sig wave ht (HC)'] > 1.3) {
+                        return '#ff9800'; // Orange for rough seas (wave > 1.3m)
+                    } else {
+                        return '#1976d2'; // Blue for normal conditions
+                    }
+                });
+
+                traces.push({
+                    x: speeds,
+                    y: cons,
+                    mode: 'markers',
+                    name: 'Actual Data',
+                    marker: { 
+                        size: 10, 
+                        color: colors,
+                        line: { color: '#ffffff', width: 1 }
+                    },
+                    customdata: dates.map((date, i) => [date, bf[i], waveHt[i], cf[i]]),
+                    hovertemplate: '<b>Actual Voyage</b><br>' +
+                                   'Date: %{customdata[0]}<br>' +
+                                   'Speed: %{x:.2f} knots<br>' +
+                                   'Cons: %{y:.2f} mt/day<br>' +
+                                   'Beaufort: %{customdata[1]}<br>' +
+                                   'Wave Height: %{customdata[2]:.2f}m<br>' +
+                                   'CF (HC): %{customdata[3]:.2f}<extra></extra>'
+                });
+            }
+
+            // Layout configuration
+            const layout = {
+                title: {
+                    text: `Speed vs Consumption - ${filters.condition} Condition`,
+                    font: { size: 24, color: '#1a237e' }
+                },
+                xaxis: {
+                    title: {
+                        text: `Speed (${filters.speed}) [knots]`,
+                        font: { size: 16, color: '#424242' }
+                    },
+                    gridcolor: '#e0e0e0',
+                    showgrid: true,
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikethickness: 1,
+                    spikecolor: '#666666',
+                    spikedash: 'dot'
+                },
+                yaxis: {
+                    title: {
+                        text: 'Consumption [mt/day]',
+                        font: { size: 16, color: '#424242' }
+                    },
+                    gridcolor: '#e0e0e0',
+                    showgrid: true,
+                    showspikes: true,
+                    spikemode: 'across',
+                    spikethickness: 1,
+                    spikecolor: '#666666',
+                    spikedash: 'dot'
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: '#ffffff',
+                hovermode: 'closest',
+                showlegend: true,
+                hoverdistance: 20,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    bordercolor: '#bdbdbd',
+                    borderwidth: 1
+                },
+                margin: { l: 80, r: 40, t: 80, b: 80 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot('performanceChart', traces, layout, config);
+        }
+
+        function updateStats(filteredData) {
+            const count = filteredData.length;
+            
+            if (count === 0) {
+                document.getElementById('statDataPoints').textContent = '0';
+                document.getElementById('statAvgSpeed').textContent = '0.00';
+                document.getElementById('statAvgCons').textContent = '0.00';
+                return;
+            }
+
+            const speeds = filteredData.map(d => d[filters.speed]);
+            const cons = filteredData.map(d => d['Total Cons/day']);
+
+            const avgSpeed = speeds.reduce((a, b) => a + b, 0) / count;
+            const avgCons = cons.reduce((a, b) => a + b, 0) / count;
+
+            document.getElementById('statDataPoints').textContent = count;
+            document.getElementById('statAvgSpeed').textContent = avgSpeed.toFixed(2);
+            document.getElementById('statAvgCons').textContent = avgCons.toFixed(2);
+        }
+
+        // Load data and initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            if (DATA) {
+                window.DATA = DATA;
+                init();
+            } else {
+                console.error('Data not embedded');
+                alert('Error: Data not properly embedded in the HTML file.');
+            }
+        });
+    </script>
+</body>
+</html>
